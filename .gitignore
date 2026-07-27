@@ -6,6 +6,9 @@ dist/
 coverage/
 build/
 
+# Scratch written by the App Store Connect CLI while planning a metadata change
+.asc/
+
 # Environment and local configuration
 .env
 .env.*

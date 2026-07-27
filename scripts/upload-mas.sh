@@ -16,11 +16,22 @@ ASC_PROFILE="${ASC_PROFILE:-Median}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PKG="$REPO_ROOT/build/$APP_NAME.pkg"
+BUILT_APP="$REPO_ROOT/src-tauri/target/universal-apple-darwin/release/bundle/macos/$APP_NAME.app"
 
 if [ ! -f "$PKG" ]; then
   echo "upload-mas: no package at $PKG — run scripts/build-mas.sh first" >&2
   exit 1
 fi
+
+# A package, unlike an IPA, does not tell App Store Connect what is inside it,
+# so the two version numbers travel alongside. They are read back off the
+# bundle that went into the package rather than from configuration, so what is
+# declared is always what was built.
+plist_value() {
+  /usr/libexec/PlistBuddy -c "Print :$1" "$BUILT_APP/Contents/Info.plist"
+}
+VERSION="$(plist_value CFBundleShortVersionString)"
+BUILD_NUMBER="$(plist_value CFBundleVersion)"
 
 # Looked up rather than hardcoded, so the identifier is stated once (here and
 # in tauri.conf.json) instead of once more as a number nobody can read.
@@ -31,5 +42,10 @@ if not apps:
     sys.exit("upload-mas: no app in App Store Connect for '"$BUNDLE_ID"'")
 print(apps[0]["id"])')"
 
-echo "upload-mas: uploading to app $APP_ID"
-asc --profile "$ASC_PROFILE" builds upload --app "$APP_ID" --pkg "$PKG" --wait
+echo "upload-mas: uploading $VERSION ($BUILD_NUMBER) to app $APP_ID"
+asc --profile "$ASC_PROFILE" builds upload \
+  --app "$APP_ID" \
+  --pkg "$PKG" \
+  --version "$VERSION" \
+  --build-number "$BUILD_NUMBER" \
+  --wait

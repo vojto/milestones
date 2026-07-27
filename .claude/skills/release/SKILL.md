@@ -44,13 +44,19 @@ asc auth login --name "Median" \
 | Installer signing | `3rd Party Mac Developer Installer: Median Tech, s.r.o.`  |
 | Provisioning      | `Milestones Mac App Store` (MAC_APP_STORE, fetched fresh) |
 | Screenshot type   | `APP_DESKTOP`, 2880×1800                                  |
+| App ID            | `6795149910`                                              |
 
-The app's numeric ID is never written down — every command resolves it from the
-bundle ID:
+`upload-mas.sh` resolves the app ID from the bundle ID rather than holding the
+number, and you can too:
 
 ```bash
 asc --profile Median apps list --bundle-id tech.median.milestones --output table
 ```
+
+**`asc` defaults to `--platform IOS` nearly everywhere.** Any command that
+takes the flag needs `--platform MAC_OS`, and the ones that do not take it
+(`screenshots upload`) need to be addressed by resource ID instead. An
+"app store version not found for platform IOS" error always means this.
 
 ## Steps
 
@@ -97,8 +103,15 @@ asc --profile Median versions create \
   --copyright "2026 Median Tech, s.r.o." --output table
 ```
 
-If a `DEVELOPER_REJECTED` version for that number already exists, update it
-rather than creating another.
+A version that already exists — the previous one before it has shipped, or a
+`DEVELOPER_REJECTED` one — cannot be joined by a second. Rename it instead:
+
+```bash
+asc --profile Median versions update --version-id VERSION_ID --version "1.0.0" \
+  --copyright "2026 Median Tech, s.r.o."
+```
+
+Keep the version string equal to `CFBundleShortVersionString` in the build.
 
 ### 5. Apply metadata
 
@@ -107,20 +120,50 @@ is the name, subtitle and privacy policy URL; `version/<version>/en-US.json` is
 the description, keywords and support URL. Copy the version directory when you
 start a new version, and write `whatsNew` in the new one.
 
+`apply` will not act on a plan nobody looked at, so it goes plan, approve,
+apply. The `.asc/` directory those write into is scratch, and is ignored.
+
 ```bash
 asc --profile Median metadata validate --dir ./metadata
-asc --profile Median metadata apply --app APP_ID --version "1.0.0" --dir ./metadata --confirm
+asc --profile Median metadata plan --app APP_ID --version "1.0.0" --dir ./metadata
+asc --profile Median metadata approve --review-dir .asc/metadata/review --all
+asc --profile Median metadata apply --app APP_ID --version "1.0.0" --dir ./metadata \
+  --review-dir .asc/metadata/review --confirm
 ```
+
+`apply` prints the version localization ID it wrote to. Keep it — the
+screenshot step needs it.
+
+`metadata/privacy.json` is the app privacy declaration — "collects nothing",
+which is the whole truth and needs no maintenance. It is already published;
+only re-apply it if that ever stops being true. It needs a web session
+(`asc web auth login --apple-id median@rinik.net`, run in a real terminal —
+the password prompt needs a TTY):
+
+```bash
+asc web privacy apply --app APP_ID --file ./metadata/privacy.json
+asc web privacy publish --app APP_ID --confirm
+```
+
+Note that `asc web privacy pull` reports `DATA_NOT_COLLECTED` even when
+nothing has been declared yet; `plan` is what tells you the truth.
 
 ### 6. Screenshots
 
 Only needed when the interface has changed — Apple keeps the previous set
 otherwise.
 
+They live under a locale directory —
+`metadata/screenshots/APP_DESKTOP/en-US/`. `screenshots upload` has no
+`--platform` flag and would go looking for an iOS version, so address the
+localization directly with the ID step 5 printed:
+
 ```bash
-asc --profile Median screenshots validate --path ./metadata/screenshots/APP_DESKTOP --device-type APP_DESKTOP
-asc --profile Median screenshots upload --app APP_ID --version "1.0.0" \
-  --path ./metadata/screenshots/APP_DESKTOP --device-type APP_DESKTOP
+asc --profile Median screenshots validate \
+  --path ./metadata/screenshots/APP_DESKTOP/en-US --device-type APP_DESKTOP
+asc --profile Median screenshots upload \
+  --version-localization VERSION_LOCALIZATION_ID \
+  --path ./metadata/screenshots/APP_DESKTOP/en-US --device-type APP_DESKTOP
 ```
 
 To retake them: run a build the way `Verifying the sandbox` in `AGENTS.md`
@@ -137,9 +180,30 @@ neither.
 
 ### 7. Submit
 
+Ask first what is still missing, rather than finding out from a failed
+submission:
+
+```bash
+asc --profile Median validate --app APP_ID --version "1.0.0" --output table
+```
+
+The review contact details are per version and are not copied forward, so
+every version needs them again:
+
+```bash
+asc --profile Median review details-create --version-id VERSION_ID \
+  --contact-first-name "Vojtech" --contact-last-name "Rinik" \
+  --contact-phone "+421901712101" --contact-email "vojto@rinik.net" \
+  --demo-account-required=false \
+  --notes "…what a reviewer should do with a window that has no account…"
+```
+
+`validate` will keep reporting App Privacy as unverifiable — the public API
+cannot read its publish state. That one is noise, not a blocker.
+
 ```bash
 ASC_TIMEOUT=180s asc --profile Median review submit \
-  --app APP_ID --version "1.0.0" --build BUILD_ID --confirm
+  --app APP_ID --version-id VERSION_ID --platform MAC_OS --build BUILD_ID --confirm
 ```
 
 Then confirm it landed:
@@ -149,6 +213,36 @@ asc --profile Median versions list --app APP_ID --output table
 ```
 
 Expected end state: `WAITING_FOR_REVIEW`.
+
+## Settled once, in July 2026
+
+These are properties of the app rather than of a release, and none of them
+needs doing again. They are written down because nothing in the repository
+records them, and because the next person to wonder "where is the category
+set?" should not have to go looking.
+
+```bash
+asc --profile Median app-setup categories set --app APP_ID --primary PRODUCTIVITY
+asc --profile Median apps content-rights edit --app APP_ID --uses-third-party-content=false
+asc --profile Median age-rating edit --app APP_ID --all-none          # 4+
+asc --profile Median app-setup pricing set --app APP_ID --free
+```
+
+Availability had to be created before it could be edited, and wants every
+territory named — `--all-territories` only works on an app that already has
+an availability record:
+
+```bash
+TERRS=$(asc --profile Median pricing territories list --output json --paginate |
+  python3 -c "import sys,json; print(','.join(t['id'] for t in json.load(sys.stdin)['data']))")
+asc --profile Median pricing availability create --app APP_ID \
+  --available true --available-in-new-territories true --territory "$TERRS"
+```
+
+The app record itself was made with `asc web apps create`, which needs a web
+session rather than the API key. It creates a version named after `--version`
+truncated to two components, which is why 1.0.0 arrived as `1.0` and had to be
+renamed.
 
 ## Things that go wrong
 

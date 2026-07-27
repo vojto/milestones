@@ -18,7 +18,9 @@ export default function MilestoneList({ header }: { header?: ReactNode }) {
 
   return (
     <div
-      className="flex-1 overflow-y-auto px-5 py-8"
+      // The top padding matches the calendar pane's header, so the two titles
+      // sit on one line across the window.
+      className="flex-1 overflow-y-auto px-5 pb-8 pt-4"
       // Deselect on presses that land outside any row; row presses bubble up
       // here but have already selected via the row's own handler.
       onPointerDown={(event) => {

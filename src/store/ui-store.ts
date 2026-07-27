@@ -86,8 +86,9 @@ export function showYear(year: number) {
 }
 
 // Both halves of a pick move together, so the calendar is never waiting for a
-// day without knowing where to put it. What starting and finishing a pick
-// *means* belongs to operations/schedule.ts, which is the only caller.
+// day without knowing where to put it. Which of the two dates a pick is for is
+// all this records; where the chosen day then lands belongs to
+// operations/schedule.ts, which is what ends the pick.
 export function startPickingDate(milestoneId: MilestoneId, field: DateField) {
   useUiStore.setState({
     selectedMilestoneId: milestoneId,

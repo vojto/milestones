@@ -3,9 +3,12 @@
 // it through here first, so the "not named yet" state looks the same in the
 // list and in a menu label.
 
-export const MILESTONE_PLACEHOLDER_NAME = "New Milestone"
+const PLACEHOLDER_NAME = "New Milestone"
 
-export function displayName(name: string | undefined, placeholder: string) {
+export function displayName(name: string | undefined) {
   const isPlaceholder = (name ?? "").trim() === ""
-  return { isPlaceholder, text: isPlaceholder ? placeholder : (name ?? "") }
+  return {
+    isPlaceholder,
+    text: isPlaceholder ? PLACEHOLDER_NAME : (name ?? ""),
+  }
 }

@@ -64,11 +64,11 @@ export function useKeyboard() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const selectedId = selectedMilestoneId(db)
-
       if (event.metaKey || event.ctrlKey) {
         return
       }
+
+      const selectedId = selectedMilestoneId(db)
 
       switch (event.key) {
         case "Escape":

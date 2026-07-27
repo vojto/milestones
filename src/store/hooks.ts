@@ -19,7 +19,6 @@ export const {
   useCreateCheckpoints,
   useCreatePersister,
   useCreateStore,
-  useHasRow,
   useSortedRowIds,
   useStore,
   useTable,

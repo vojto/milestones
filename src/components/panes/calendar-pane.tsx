@@ -13,8 +13,8 @@ export default function CalendarPane() {
   const thisYear = yearOf(today)
 
   return (
-    <section className="flex h-full min-h-0 min-w-0 flex-col bg-white">
-      <header className="flex items-center gap-1 px-6 pb-6 pt-8">
+    <section className="relative flex h-full min-h-0 min-w-0 flex-col bg-white">
+      <header className="flex items-center gap-1 px-6 pb-5 pt-4">
         <h1 className="mr-2 text-2xl font-semibold tabular-nums tracking-tight">
           {year}
         </h1>
@@ -46,9 +46,9 @@ export default function CalendarPane() {
         )}
       </header>
 
-      {/* Below the year, not above it: the calendar keeps the top of the pane
-          whether or not a pick is in flight, so entering the mode cannot
-          shift the day you were about to click out from under the pointer. */}
+      {/* The banner floats over the foot of the calendar rather than sitting
+          under it, so entering the pick cannot resize the year and shift the
+          day you were about to click out from under the pointer. */}
       <YearCalendar year={year} />
       <DatePickBanner />
     </section>

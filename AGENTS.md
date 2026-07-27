@@ -42,6 +42,11 @@ code structure, helper extraction, naming, change scope, and verification.
   staging copy reads the same document as the dev build — the identifier
   decides that — so the user lives with the change in a real window rather
   than a `tauri dev` one. `scripts/install-local.sh` is the script itself.
+- **Then commit and push**, without being asked: `git add -A`, one commit
+  describing the feature, and `git push` to `origin main`. Work lands on
+  `main` — this is a single-author app with no review step, and a branch that
+  is never opened as a pull request is just an unpushed commit. So the order
+  at the end of every feature is: verify, stage, commit, push.
 
 ## The icon
 

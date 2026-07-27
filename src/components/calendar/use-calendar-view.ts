@@ -1,3 +1,4 @@
+import type { Table } from "tinybase/with-schemas"
 import { addDays, type DayKey } from "../../dates/day"
 import {
   usePickingMilestoneId,
@@ -7,7 +8,7 @@ import { useToday } from "../../hooks/use-today"
 import { useDb, useTable } from "../../store/hooks"
 import { paintedRange } from "../../store/milestone-span"
 import { commitDatePick } from "../../store/operations/schedule"
-import type { MilestoneId } from "../../store/schema"
+import type { MilestoneId, Schemas } from "../../store/schema"
 import { milestoneColor, type MilestoneColor } from "../../ui/milestone-colors"
 
 // Everything the twelve months need to know, worked out once at the top of the
@@ -60,10 +61,7 @@ export function useCalendarView(year: number): CalendarView {
 // milestone running across three of them costs one year's worth of entries
 // rather than three.
 function fillsForYear(
-  milestones: Record<
-    string,
-    { color?: string; startedAt?: string; finishedAt?: string }
-  >,
+  milestones: Table<Schemas[0], "milestones">,
   year: number,
   today: DayKey,
 ): Map<DayKey, DayFill> {

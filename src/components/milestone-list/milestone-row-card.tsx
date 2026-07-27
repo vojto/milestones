@@ -4,7 +4,7 @@ import { useToday } from "../../hooks/use-today"
 import { useCell } from "../../store/hooks"
 import { paintedRange } from "../../store/milestone-span"
 import type { MilestoneId } from "../../store/schema"
-import { displayName, MILESTONE_PLACEHOLDER_NAME } from "../../ui/display-name"
+import { displayName } from "../../ui/display-name"
 import { milestoneColor } from "../../ui/milestone-colors"
 
 // The row's visual card. It reads by id, so every rendering stays in sync.
@@ -28,7 +28,7 @@ export default function MilestoneRowCard({
     return null
   }
 
-  const { isPlaceholder, text } = displayName(name, MILESTONE_PLACEHOLDER_NAME)
+  const { isPlaceholder, text } = displayName(name)
 
   // The transition class rides along only in the editing state, so entering
   // edit mode animates but selection changes snap. It's scoped to

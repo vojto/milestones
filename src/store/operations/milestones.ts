@@ -1,8 +1,12 @@
+import { nextColorKey } from "../../ui/milestone-colors"
 import type { Db } from "../hooks"
 import type { MilestoneId } from "../schema"
-import { editMilestone, uiState } from "../ui-store"
-import { nextColorKey } from "../../ui/milestone-colors"
-import { clearMilestoneSelection, selectMilestone } from "../ui-store"
+import {
+  clearMilestoneSelection,
+  editMilestone,
+  selectMilestone,
+  uiState,
+} from "../ui-store"
 import { asUndoStep } from "./undo"
 
 // Creating, naming, coloring and ordering a milestone. What its dates mean —

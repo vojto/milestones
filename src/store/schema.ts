@@ -21,6 +21,11 @@ export const TABLES_SCHEMA = {
     color: { type: "string" },
     startedAt: { type: "string" },
     finishedAt: { type: "string" },
+    // The year a milestone belongs to while it has no dates — the one that was
+    // on screen when it was created. Once it has a start the dates say which
+    // years it runs through and this is ignored, so it is only ever the answer
+    // for a milestone that has not said when it was (see ./milestone-span).
+    year: { type: "number" },
   },
 } as const
 

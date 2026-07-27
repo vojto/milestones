@@ -17,10 +17,15 @@ export default function MilestoneListPane() {
     <section className="flex h-full min-h-0 min-w-0 flex-col bg-white">
       <PaneHeader>
         {/* px-3 matches the row card's own padding, so the title lines up
-            with the color dots below it. */}
-        <h1 className="px-3 text-xl font-semibold tracking-tight">
+            with the color dots below it. mr-auto puts the button on the
+            pane's right edge. */}
+        <h1 className="mr-auto px-3 text-xl font-semibold tracking-tight">
           Milestones
         </h1>
+        <ToolbarButton onClick={handleNewMilestone}>
+          <Plus aria-hidden="true" className="size-4" />
+          New milestone
+        </ToolbarButton>
       </PaneHeader>
       <ContextMenu
         trigger={
@@ -33,13 +38,6 @@ export default function MilestoneListPane() {
           New milestone
         </ContextMenuItem>
       </ContextMenu>
-
-      <footer className="h-12 shrink-0 border-t border-neutral-200 p-2">
-        <ToolbarButton onClick={handleNewMilestone}>
-          <Plus aria-hidden="true" className="size-4" />
-          New milestone
-        </ToolbarButton>
-      </footer>
     </section>
   )
 }

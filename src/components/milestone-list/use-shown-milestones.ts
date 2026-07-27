@@ -24,10 +24,7 @@ export function useShownMilestones(): {
   return {
     milestoneIds: sortedIds.filter((milestoneId) => {
       const milestone = milestones[milestoneId]
-      return (
-        milestone !== undefined &&
-        runsThroughYear(milestone.startedAt, milestone.finishedAt, today, year)
-      )
+      return milestone !== undefined && runsThroughYear(milestone, today, year)
     }),
     hasAnyMilestones: sortedIds.length > 0,
   }

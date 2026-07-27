@@ -1,6 +1,9 @@
-import type { DayKey } from "../dates/day"
+import type { Row } from "tinybase/with-schemas"
+import { yearOf, type DayKey } from "../dates/day"
 import type { Db } from "./hooks"
-import type { MilestoneId } from "./schema"
+import type { MilestoneId, Schemas } from "./schema"
+
+export type Milestone = Row<Schemas[0], "milestones">
 
 // What a milestone's two dates mean as a stretch of time. Two questions get
 // asked of them and they are not the same question, so each gets its own
@@ -73,18 +76,19 @@ export function claimsOverlap(one: Claim, other: Claim): boolean {
 //
 // A milestone belongs to every year its stretch runs through, and a running
 // one reaches no further than today — it has not happened next year yet. A
-// milestone with no dates at all belongs to every year: it has not said when
-// it was, so there is no year it is not in, and one you have just created
-// stays in front of you rather than vanishing.
+// milestone with no dates yet belongs to the year it was created in — the year
+// that was on screen at the time — so one you have just made stays in front of
+// you instead of turning up in every other year as well. One written before
+// that year was recorded falls back to this year, which is where it would have
+// been made.
 export function runsThroughYear(
-  startedAt: string | undefined,
-  finishedAt: string | undefined,
+  milestone: Milestone,
   today: DayKey,
   year: number,
 ): boolean {
-  const claim = claimOf(startedAt, finishedAt)
+  const claim = claimOf(milestone.startedAt, milestone.finishedAt)
   if (claim === undefined) {
-    return true
+    return (milestone.year ?? yearOf(today)) === year
   }
   // An open end reaches today, or its own start if that is still ahead — a
   // milestone starting next year is in next year, not in every year between.

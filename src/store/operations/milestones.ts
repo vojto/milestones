@@ -36,12 +36,7 @@ export function shownMilestoneIds(db: Db): readonly MilestoneId[] {
   const today = todayKey()
   const { year } = uiState()
   return milestoneIds(db).filter((milestoneId) =>
-    runsThroughYear(
-      db.store.getCell("milestones", milestoneId, "startedAt"),
-      db.store.getCell("milestones", milestoneId, "finishedAt"),
-      today,
-      year,
-    ),
+    runsThroughYear(db.store.getRow("milestones", milestoneId), today, year),
   )
 }
 
@@ -74,7 +69,9 @@ function insertPosition(
 
 // A new milestone starts unnamed, undated and wearing whichever color nobody
 // has taken. It gets no dates: creating one is saying it exists, and when it
-// started is a separate thing to say (see ./schedule).
+// started is a separate thing to say (see ./schedule). It does get the year on
+// screen, which is where an undated milestone lives until its dates say
+// otherwise — make one while looking at a year and it is in that year.
 export function addMilestone(db: Db, index?: number): MilestoneId {
   const id: MilestoneId = `milestone-${crypto.randomUUID()}`
   const takenKeys = milestoneIds(db).map(
@@ -84,6 +81,7 @@ export function addMilestone(db: Db, index?: number): MilestoneId {
     name: "",
     position: insertPosition(db, index),
     color: nextColorKey(takenKeys),
+    year: uiState().year,
   })
   return id
 }

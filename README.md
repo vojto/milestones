@@ -8,6 +8,8 @@ today or up to the day it finished.
 The milestones are a single timeline — no two of them cover the same day. Set
 one to start today and whatever was running finishes yesterday.
 
+![A year of milestones painted across the calendar](metadata/screenshots/APP_DESKTOP/en-US/01-year.png)
+
 ## Using it
 
 Right-click a milestone for everything it can do:

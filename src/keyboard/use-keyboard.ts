@@ -1,6 +1,9 @@
 import { useEffect } from "react"
 import { useDb, type Db } from "../store/hooks"
-import { deleteMilestone, milestoneIds } from "../store/operations/milestones"
+import {
+  deleteMilestone,
+  shownMilestoneIds,
+} from "../store/operations/milestones"
 import {
   clearMilestoneSelection,
   editMilestone,
@@ -32,11 +35,12 @@ function selectedMilestoneId(db: Db): string | undefined {
     : undefined
 }
 
-// Moves the selection by `offset` rows. With nothing selected it enters the
-// list from the end it is heading for: down lands on the first row, up on the
-// last. At either end it stays put.
+// Moves the selection by `offset` rows — through the list as shown, which is
+// one year of it. With nothing selected it enters the list from the end it is
+// heading for: down lands on the first row, up on the last. At either end it
+// stays put.
 function moveSelection(db: Db, offset: number) {
-  const ids = milestoneIds(db)
+  const ids = shownMilestoneIds(db)
   const selectedId = selectedMilestoneId(db)
   const nextId =
     selectedId === undefined

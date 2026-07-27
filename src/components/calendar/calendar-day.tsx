@@ -1,8 +1,8 @@
 import {
   formatDay,
-  isWeekend,
   monthOf,
   weekdayIndex,
+  WEEKDAYS,
   type DayKey,
 } from "../../dates/day"
 import { runEdges, type CalendarView, type DayFill } from "./use-calendar-view"
@@ -38,13 +38,9 @@ export default function CalendarDay({
     view.selectedMilestoneId !== fill.milestoneId
 
   const dayOfMonth = Number(day.slice(-2))
-  // A day off is worth drawing more faintly, but not the one you are standing
-  // on: today keeps the ordinary weekday tone whichever day of the week it is.
   const textClass =
     fill === undefined || isDimmed
-      ? isWeekend(day) && !isToday
-        ? "text-neutral-300"
-        : "text-neutral-500"
+      ? "text-neutral-500"
       : fill.color.dayTextClass
   // Today is circled rather than filled in, and the circle is drawn in the
   // number's own color: on a plain day it is a grey outline, and on a colored
@@ -81,8 +77,10 @@ export default function CalendarDay({
 
 // The colored band behind the number, drawn as its own layer so dimming it
 // leaves today's marker at full contrast. Rounded only where the run of days
-// actually ends — and at the two edges of the week, where the band wraps to
-// the next row and a square corner would look like it had been cut off.
+// actually ends — and at Monday and Friday, where the band wraps to the next
+// row and a square corner would look like it had been cut off. A run that
+// merely crosses a weekend is not an end: Friday's neighbour is Saturday,
+// which is filled like any other day even though it has no column.
 function DayBand({
   day,
   fill,
@@ -97,7 +95,8 @@ function DayBand({
   const { isRunStart, isRunEnd } = runEdges(view, day)
   const weekday = weekdayIndex(day)
   const roundLeft = isRunStart || weekday === 0 ? "rounded-l-md" : ""
-  const roundRight = isRunEnd || weekday === 6 ? "rounded-r-md" : ""
+  const roundRight =
+    isRunEnd || weekday === WEEKDAYS.length - 1 ? "rounded-r-md" : ""
 
   return (
     <span

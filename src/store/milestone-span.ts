@@ -67,6 +67,31 @@ export function claimsOverlap(one: Claim, other: Claim): boolean {
   )
 }
 
+// Whether a milestone belongs in a given year's list. The list shows one year
+// at a time, the same year the calendar is showing, so this is the question of
+// which milestones that is.
+//
+// A milestone belongs to every year its stretch runs through, and a running
+// one reaches no further than today — it has not happened next year yet. A
+// milestone with no dates at all belongs to every year: it has not said when
+// it was, so there is no year it is not in, and one you have just created
+// stays in front of you rather than vanishing.
+export function runsThroughYear(
+  startedAt: string | undefined,
+  finishedAt: string | undefined,
+  today: DayKey,
+  year: number,
+): boolean {
+  const claim = claimOf(startedAt, finishedAt)
+  if (claim === undefined) {
+    return true
+  }
+  // An open end reaches today, or its own start if that is still ahead — a
+  // milestone starting next year is in next year, not in every year between.
+  const to = claim.to ?? (today > claim.from ? today : claim.from)
+  return claim.from <= `${year}-12-31` && to >= `${year}-01-01`
+}
+
 // The days that actually get the milestone's color. Undefined when there is
 // nothing to paint: the milestone has not started, or it is still running and
 // its start is in the future, so its whole life so far is zero days long.

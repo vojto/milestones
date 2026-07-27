@@ -14,7 +14,7 @@ import { useLayoutEffect, useRef, useState } from "react"
 // One month before scaling. The number matters only as a ratio against the
 // month's measured height — the scale factor decides what it comes out as on
 // screen.
-export const MONTH_WIDTH = 200
+export const MONTH_WIDTH = 150
 export const GAP_X = 24
 export const GAP_Y = 20
 // Breathing room around the year, in the pane's own pixels rather than scaled

@@ -74,24 +74,27 @@ export function monthOf(day: DayKey): number {
   return dateOf(day).getMonth()
 }
 
-// Monday-first, which is what the weekday header row and the month grid both
-// have to agree on. Kept here rather than in the grid so the two cannot drift.
+// Monday to Friday, which is what the weekday header row and the month grid
+// both have to agree on. Kept here rather than in the grid so the two cannot
+// drift, and its length is what "a week" means everywhere the calendar counts
+// columns.
+//
+// The weekend is not drawn at all (see components/calendar/month-weeks), so
+// these five are the whole week as far as the app is concerned.
 const WEEKDAY_NAME = new Intl.DateTimeFormat(undefined, { weekday: "narrow" })
 
 // Narrow weekday names repeat — T stands for Tuesday and Thursday — so a
 // weekday's place in the week travels with it as its identity.
 export const WEEKDAYS: readonly { name: string; weekday: number }[] =
-  Array.from({ length: 7 }, (_unused, weekday) => ({
+  Array.from({ length: 5 }, (_unused, weekday) => ({
     // 2024-01-01 was a Monday.
     name: WEEKDAY_NAME.format(new Date(2024, 0, 1 + weekday, 12)),
     weekday,
   }))
 
-// How far into a Monday-first week a day sits: Monday 0 … Sunday 6.
+// How far into a Monday-first week a day sits: Monday 0 … Sunday 6. Saturday
+// and Sunday still have an index — they are real days that milestones run
+// through — they simply have no column.
 export function weekdayIndex(day: DayKey): number {
   return (dateOf(day).getDay() + 6) % 7
-}
-
-export function isWeekend(day: DayKey): boolean {
-  return weekdayIndex(day) >= 5
 }

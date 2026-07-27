@@ -6,7 +6,10 @@ import type {
 } from "@dnd-kit/react"
 import { useRef } from "react"
 import { useDb, type Db } from "../../store/hooks"
-import { milestoneIds, moveMilestone } from "../../store/operations/milestones"
+import {
+  moveMilestone,
+  shownMilestoneIds,
+} from "../../store/operations/milestones"
 import {
   currentCheckpoint,
   revertTo,
@@ -37,7 +40,7 @@ function commitPlacement(
   const y =
     event.operation.shape?.current.center.y ??
     event.operation.position.current.y
-  const ids = milestoneIds(db)
+  const ids = shownMilestoneIds(db)
   // The dragged row is left out: its own rectangle is wherever the pointer
   // has taken it, which says nothing about where it belongs.
   const index = ids.filter((rowId) => {

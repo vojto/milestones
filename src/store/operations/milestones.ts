@@ -1,5 +1,7 @@
+import { todayKey } from "../../dates/day"
 import { nextColorKey } from "../../ui/milestone-colors"
 import type { Db } from "../hooks"
+import { runsThroughYear } from "../milestone-span"
 import type { MilestoneId } from "../schema"
 import {
   clearMilestoneSelection,
@@ -21,18 +23,43 @@ export function milestoneIds(db: Db): readonly MilestoneId[] {
   return db.store.getSortedRowIds("milestones", "position")
 }
 
+// The milestones the list is actually showing: the ones that run through the
+// year the calendar is on (see ../milestone-span). Ordering, the selection and
+// the keyboard all work on this rather than on the whole document, because
+// what the user is arranging is the list in front of them — a drag must not
+// place a milestone relative to rows it cannot see.
+//
+// The timeline rule is the exception and stays on every milestone: two of them
+// covering the same day is wrong whether or not both are on screen (see
+// ./schedule).
+export function shownMilestoneIds(db: Db): readonly MilestoneId[] {
+  const today = todayKey()
+  const { year } = uiState()
+  return milestoneIds(db).filter((milestoneId) =>
+    runsThroughYear(
+      db.store.getCell("milestones", milestoneId, "startedAt"),
+      db.store.getCell("milestones", milestoneId, "finishedAt"),
+      today,
+      year,
+    ),
+  )
+}
+
 function positionOf(db: Db, milestoneId: MilestoneId): number {
   return db.store.getCell("milestones", milestoneId, "position") ?? 0
 }
 
 // Fractional positioning: dropping between two milestones takes their
-// midpoint, so inserts never renumber neighbors.
+// midpoint, so inserts never renumber neighbors. The midpoint is taken between
+// the visible neighbors — a milestone hidden between them keeps whatever
+// position it had, and lands on one side or the other of the newcomer, which
+// is as much as an ordering nobody is looking at can mean.
 function insertPosition(
   db: Db,
   index?: number,
   excludeMilestoneId?: MilestoneId,
 ): number {
-  const ids = milestoneIds(db).filter((id) => id !== excludeMilestoneId)
+  const ids = shownMilestoneIds(db).filter((id) => id !== excludeMilestoneId)
   const nextId = index === undefined ? undefined : ids[index]
   if (index === undefined || nextId === undefined) {
     const lastId = ids.at(-1)
@@ -70,7 +97,7 @@ function indexBelowSelection(db: Db): number | undefined {
   if (selectedMilestoneId === undefined) {
     return undefined
   }
-  const index = milestoneIds(db).indexOf(selectedMilestoneId)
+  const index = shownMilestoneIds(db).indexOf(selectedMilestoneId)
   return index === -1 ? undefined : index + 1
 }
 
@@ -125,7 +152,7 @@ function moveSelectionOff(db: Db, milestoneId: MilestoneId) {
   if (uiState().selectedMilestoneId !== milestoneId) {
     return
   }
-  const ids = milestoneIds(db)
+  const ids = shownMilestoneIds(db)
   const index = ids.indexOf(milestoneId)
   const successorId = ids[index + 1] ?? ids[index - 1]
   if (successorId === undefined) {

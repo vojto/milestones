@@ -3,6 +3,7 @@ import { yearOf } from "../../dates/day"
 import { useShownYear } from "../../hooks/use-milestone-ui"
 import { useToday } from "../../hooks/use-today"
 import { showYear } from "../../store/ui-store"
+import PaneHeader from "../../ui/pane-header"
 import ToolbarButton from "../../ui/toolbar-button"
 import DatePickBanner from "../calendar/date-pick-banner"
 import YearCalendar from "../calendar/year-calendar"
@@ -14,8 +15,8 @@ export default function CalendarPane() {
 
   return (
     <section className="relative flex h-full min-h-0 min-w-0 flex-col bg-white">
-      <header className="flex items-center gap-1 px-6 pb-5 pt-4">
-        <h1 className="mr-2 text-2xl font-semibold tabular-nums tracking-tight">
+      <PaneHeader>
+        <h1 className="mr-2 text-xl font-semibold tabular-nums tracking-tight">
           {year}
         </h1>
         <ToolbarButton
@@ -44,7 +45,7 @@ export default function CalendarPane() {
             This year
           </ToolbarButton>
         )}
-      </header>
+      </PaneHeader>
 
       {/* The banner floats over the foot of the calendar rather than sitting
           under it, so entering the pick cannot resize the year and shift the

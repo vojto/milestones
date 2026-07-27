@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Merged into the Info.plist Tauri generates. Everything the bundle needs comes
+  from tauri.conf.json; this file is only for keys that configuration has no
+  field for.
+
+  The app makes no network calls and ships no cryptography of its own, so the
+  export-compliance question has a fixed answer. Stating it here answers it once
+  at build time instead of once per upload.
+-->
+<plist version="1.0">
+<dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+</dict>
+</plist>

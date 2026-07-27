@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  What the App Store copy is allowed to do. The same least-privilege stance as
+  capabilities/default.json, one layer down: the sandbox is on, and nothing is
+  opened up beyond what the app cannot run without. The document lives in the
+  app's own container, which a sandboxed app may always read and write, so no
+  file entitlement is needed.
+
+  The network entitlement is not about the app reaching the network — it never
+  does. WKWebView loads even the app's own `tauri://` frontend through
+  WebKit's networking process, and inside the sandbox that process is refused
+  without it. Signed without this the window comes up blank: no frontend, so
+  no persister, so no document written. It was A/B tested that way.
+
+  The two identifiers pair the signature with the Mac App Store provisioning
+  profile — they must match what that profile grants.
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.application-identifier</key>
+	<string>Q4C48EKH9Z.tech.median.milestones</string>
+	<key>com.apple.developer.team-identifier</key>
+	<string>Q4C48EKH9Z</string>
+</dict>
+</plist>

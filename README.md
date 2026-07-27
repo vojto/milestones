@@ -45,3 +45,7 @@ npm run tauri dev
 
 `npm run build`, `npm run lint`, and `npm run format` do what they say. See
 `AGENTS.md` for how the code is organised.
+
+The Mac App Store build is a different animal — universal, sandboxed and
+signed — and `scripts/build-mas.sh` builds it. `PRIVACY.md` is the privacy
+policy the listing points at; it is short, because there is nothing to say.

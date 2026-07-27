@@ -48,6 +48,33 @@ code structure, helper extraction, naming, change scope, and verification.
   is never opened as a pull request is just an unpushed commit. So the order
   at the end of every feature is: verify, stage, commit, push.
 
+## The Mac App Store
+
+The app ships on the Mac App Store. **Use the `/release` skill in
+`.claude/skills/release` for anything to do with releasing** — it holds the
+identifiers, the certificates and the order of operations. What is worth
+knowing here is how that build differs from the one you develop against:
+
+- **It is sandboxed, and the local build is not.** `npm run stage` writes to
+  `~/Library/Application Support/tech.median.milestones`; the store copy writes
+  to the same path inside its own container. Nothing in `src/` knows the
+  difference — `appDataDir()` answers with wherever the app is allowed to
+  write — but the two do not share a document, so a change tested in one is
+  not visible in the other.
+- **`src-tauri/entitlements.mas.plist` is the sandbox.** It grants the least
+  it can, and every line in it is there because the app does not work without
+  it. Read the comment before adding or removing anything.
+- **Verifying the sandbox.** The store build cannot be launched by hand: a
+  distribution signature is killed on launch outside the store. Copy the built
+  `.app`, drop its `embedded.provisionprofile`, re-sign the copy with
+  `Developer ID Application` and the same entitlements, and run that. Anything
+  the sandbox denies fails there too.
+- **`scripts/build-mas.sh` owns signing, not Tauri.** The provisioning profile
+  has to be inside the bundle before the signature is taken and Tauri has no
+  step there, so it bundles unsigned and the script does the rest.
+- **The listing is in `metadata/`**, in the canonical `asc` layout, and is
+  edited like code rather than in a browser.
+
 ## The icon
 
 `src-tauri/app-icon.png` is the source: 1024×1024, the artwork inset to

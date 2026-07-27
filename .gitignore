@@ -4,6 +4,7 @@ node_modules/
 # Build and tool output
 dist/
 coverage/
+build/
 
 # Environment and local configuration
 .env

@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Milestones",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "identifier": "tech.median.milestones",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -29,6 +29,7 @@
     "active": true,
     "targets": "all",
     "category": "Productivity",
+    "copyright": "Copyright © 2026 Median Tech, s.r.o.",
     "shortDescription": "A year calendar of milestones",
     "longDescription": "A year calendar of milestones: when each one started, whether it is still running, and when it ended.",
     "icon": [
@@ -37,6 +38,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    }
   }
 }

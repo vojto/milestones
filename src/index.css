@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* This is a window, not a page: dragging across a milestone name should not
+   leave a trail of blue selection behind it. Text fields opt back in below,
+   since selecting the name you are editing is the point of them. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 14px;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Keeps Base UI portalled popups above the app's stacking contexts */
+#root {
+  isolation: isolate;
+}
+
+/* No focus rings anywhere. Rows are focusable so the keyboard can reach them,
+   but DOM focus is not what the app draws — selection is, and its own
+   highlight says where you are. A ring left on a row the selection has since
+   moved off would contradict it. */
+:focus,
+:focus-visible {
+  outline: none;
+}
+
+.is-resizing-pane,
+.is-resizing-pane * {
+  cursor: col-resize !important;
+  user-select: none;
+}

@@ -1,0 +1,29 @@
+[package]
+name = "milestones"
+version = "0.1.0"
+description = "A year calendar of milestones"
+edition = "2024"
+rust-version = "1.85"
+
+# The desktop entry point (src/main.rs) is a shim over this library, which is
+# also what a mobile target would link against.
+[lib]
+name = "milestones_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+# The document is a JSON file in the app data directory; see
+# ../src/platform/document-persister.ts. Reading and writing it is all this
+# app asks of the host, so it is the only plugin here.
+tauri-plugin-fs = "2"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

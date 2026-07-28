@@ -90,16 +90,17 @@ export default function CalendarDay({
   )
 }
 
-// The cross over a day off, drawn at full strength in a plain day's ink while
-// the number fades behind it — the cross is the thing being said, and the date
-// underneath only has to stay legible enough to place it. Centred by its own
-// margins rather than by the cell's flexbox, so it lies over the number
-// instead of beside it.
+// The cross over a day off. Red, which is the one thing in the calendar that
+// is: nothing else here is a mark on a day, so it reads as struck out at a
+// glance rather than as one more milestone color. The number behind it only
+// steps back a little — enough to sit behind the cross, not so far that you
+// have to look for the date. Centred by its own margins rather than by the
+// cell's flexbox, so it lies over the number instead of beside it.
 function DayCross() {
   return (
     <X
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 m-auto size-3.5 text-neutral-500"
+      className="pointer-events-none absolute inset-0 m-auto size-3.5 text-red-500"
     />
   )
 }
@@ -108,8 +109,8 @@ function DayCross() {
 //
 //   - whose day it is: the band's own text color, or grey where no band
 //     reaches — including a dimmed one, whose number steps back with it.
-//   - whether it is a day off: faded, because the cross laid over it (see
-//     ./DayCross) is what the cell is saying and the number is context for it.
+//   - whether it is a day off: stepped back a little, so the red cross laid
+//     over it (see ./DayCross) is what the cell says first.
 //   - whether it is today: circled rather than filled in, and in the number's
 //     own color, so on a colored day the circle takes the band's ink and
 //     marking today never fights the milestone underneath it. The heavier
@@ -126,7 +127,7 @@ function dayNumberClass({
   isVacation: boolean
 }): string {
   const inkClass = isVacation
-    ? "text-neutral-500 opacity-40"
+    ? "text-neutral-500 opacity-75"
     : fill === undefined || isDimmed
       ? "text-neutral-500"
       : fill.color.dayTextClass

@@ -94,13 +94,18 @@ export default function CalendarDay({
 // is: nothing else here is a mark on a day, so it reads as struck out at a
 // glance rather than as one more milestone color. The number behind it only
 // steps back a little — enough to sit behind the cross, not so far that you
-// have to look for the date. Centred by its own margins rather than by the
-// cell's flexbox, so it lies over the number instead of beside it.
+// have to look for the date.
+//
+// Centred by its own margins against the cell rather than by the cell's
+// flexbox, which puts it on the same centre the number is laid out around.
+// Sized to cross the number rather than to sit inside it: the icon's stroke
+// spans 7/12 of its box, so 18px draws a cross about 10.5px across, against
+// the 12.3px a two-digit day is wide.
 function DayCross() {
   return (
     <X
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 m-auto size-3.5 text-red-500"
+      className="pointer-events-none absolute inset-0 m-auto size-4.5 text-red-500"
     />
   )
 }

@@ -1,3 +1,4 @@
+import { X } from "lucide-react"
 import {
   dayOfMonth,
   formatDay,
@@ -13,9 +14,10 @@ import { runEdges, type CalendarView, type DayFill } from "./use-calendar-view"
 const CELL_CLASS =
   "relative flex h-6 items-center justify-center text-[11px] tabular-nums"
 
-// One day of a month. Two layers: the milestone's band, which spans the whole
-// cell so consecutive days join into a continuous bar, and the number on top
-// of it, which never moves whether the day is colored or not.
+// One day of a month, in layers: the milestone's band, which spans the whole
+// cell so consecutive days join into a continuous bar; the number on top of
+// it, which never moves whether the day is colored or not; and on a day off,
+// the cross over the number.
 export default function CalendarDay({
   day,
   month,
@@ -43,12 +45,23 @@ export default function CalendarDay({
     view.selectedMilestoneId !== undefined &&
     view.selectedMilestoneId !== fill.milestoneId
 
-  const numberClass = dayNumberClass({
-    fill,
-    isDimmed,
-    isToday: day === view.today,
-    isVacation,
-  })
+  // The number and, on a day off, the cross over it. Built once and used in
+  // both modes below, which is what keeps the two from drifting apart.
+  const face = (
+    <>
+      <span
+        className={dayNumberClass({
+          fill,
+          isDimmed,
+          isToday: day === view.today,
+          isVacation,
+        })}
+      >
+        {dayOfMonth(day)}
+      </span>
+      {isVacation && <DayCross />}
+    </>
+  )
 
   return (
     // data-day is how a right-click finds which day it landed on: the calendar
@@ -68,14 +81,26 @@ export default function CalendarDay({
           }}
           type="button"
         >
-          <span className={numberClass}>{dayOfMonth(day)}</span>
+          {face}
         </button>
       ) : (
-        <div className={CELL_CLASS}>
-          <span className={numberClass}>{dayOfMonth(day)}</span>
-        </div>
+        <div className={CELL_CLASS}>{face}</div>
       )}
     </td>
+  )
+}
+
+// The cross over a day off, drawn at full strength in a plain day's ink while
+// the number fades behind it — the cross is the thing being said, and the date
+// underneath only has to stay legible enough to place it. Centred by its own
+// margins rather than by the cell's flexbox, so it lies over the number
+// instead of beside it.
+function DayCross() {
+  return (
+    <X
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 m-auto size-3.5 text-neutral-500"
+    />
   )
 }
 
@@ -83,8 +108,8 @@ export default function CalendarDay({
 //
 //   - whose day it is: the band's own text color, or grey where no band
 //     reaches — including a dimmed one, whose number steps back with it.
-//   - whether it is a day off: struck through, in an ink darker than a plain
-//     day's, because a day crossed out is a statement rather than an absence.
+//   - whether it is a day off: faded, because the cross laid over it (see
+//     ./DayCross) is what the cell is saying and the number is context for it.
 //   - whether it is today: circled rather than filled in, and in the number's
 //     own color, so on a colored day the circle takes the band's ink and
 //     marking today never fights the milestone underneath it. The heavier
@@ -101,7 +126,7 @@ function dayNumberClass({
   isVacation: boolean
 }): string {
   const inkClass = isVacation
-    ? "text-neutral-600 line-through"
+    ? "text-neutral-500 opacity-40"
     : fill === undefined || isDimmed
       ? "text-neutral-500"
       : fill.color.dayTextClass

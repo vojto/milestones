@@ -25,6 +25,18 @@ export function todayKey(): DayKey {
   return dayKeyOf(new Date())
 }
 
+// Day keys sort chronologically, so the earlier and the later of two is a
+// comparison rather than arithmetic. Both are clipping, which is what makes
+// them worth naming: a stretch clipped to a year, a finish clipped to its own
+// start.
+export function earlierDay(day: DayKey, other: DayKey): DayKey {
+  return day < other ? day : other
+}
+
+export function laterDay(day: DayKey, other: DayKey): DayKey {
+  return day > other ? day : other
+}
+
 export function addDays(day: DayKey, offset: number): DayKey {
   const date = dateOf(day)
   date.setDate(date.getDate() + offset)
@@ -41,6 +53,17 @@ export function dayCount(from: DayKey, to: DayKey): number {
 
 export function yearOf(day: DayKey): number {
   return dateOf(day).getFullYear()
+}
+
+// The two ends of a year, which is how anything scoped to the year on screen
+// says so: a day is in it when it sorts between these (see
+// store/milestone-span and components/calendar/use-calendar-view).
+export function firstDayOfYear(year: number): DayKey {
+  return `${year}-01-01`
+}
+
+export function lastDayOfYear(year: number): DayKey {
+  return `${year}-12-31`
 }
 
 const SHORT_DATE = new Intl.DateTimeFormat(undefined, {
@@ -72,6 +95,11 @@ export function monthName(year: number, month: number): string {
 // both count in.
 export function monthOf(day: DayKey): number {
   return dateOf(day).getMonth()
+}
+
+// The number the calendar prints in the cell.
+export function dayOfMonth(day: DayKey): number {
+  return dateOf(day).getDate()
 }
 
 // Monday to Friday, which is what the weekday header row and the month grid

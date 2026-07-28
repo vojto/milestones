@@ -1,4 +1,4 @@
-import { addDays, type DayKey } from "../../dates/day"
+import { addDays, laterDay, type DayKey } from "../../dates/day"
 import type { Db } from "../hooks"
 import { claimOfMilestone, claimsOverlap } from "../milestone-span"
 import type { MilestoneId } from "../schema"
@@ -105,7 +105,7 @@ export function finishMilestoneOn(
       "milestones",
       milestoneId,
       "finishedAt",
-      startedAt !== undefined && day < startedAt ? startedAt : day,
+      startedAt === undefined ? day : laterDay(day, startedAt),
     )
     makeRoomFor(db, milestoneId)
   })

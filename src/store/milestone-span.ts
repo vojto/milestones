@@ -1,5 +1,11 @@
 import type { Row } from "tinybase/with-schemas"
-import { yearOf, type DayKey } from "../dates/day"
+import {
+  firstDayOfYear,
+  lastDayOfYear,
+  laterDay,
+  yearOf,
+  type DayKey,
+} from "../dates/day"
 import type { Db } from "./hooks"
 import type { MilestoneId, Schemas } from "./schema"
 
@@ -44,10 +50,7 @@ export function claimOf(
   // damaged document drawable rather than invisible.
   return {
     from: startedAt,
-    to:
-      finishedAt !== undefined && finishedAt < startedAt
-        ? startedAt
-        : finishedAt,
+    to: finishedAt === undefined ? undefined : laterDay(finishedAt, startedAt),
   }
 }
 
@@ -92,8 +95,8 @@ export function runsThroughYear(
   }
   // An open end reaches today, or its own start if that is still ahead — a
   // milestone starting next year is in next year, not in every year between.
-  const to = claim.to ?? (today > claim.from ? today : claim.from)
-  return claim.from <= `${year}-12-31` && to >= `${year}-01-01`
+  const to = claim.to ?? laterDay(today, claim.from)
+  return claim.from <= lastDayOfYear(year) && to >= firstDayOfYear(year)
 }
 
 // The days that actually get the milestone's color. Undefined when there is

@@ -1,34 +1,19 @@
-import { todayKey } from "../../dates/day"
 import {
   useIsMilestoneEditing,
   useIsMilestoneSelected,
 } from "../../hooks/use-milestone-ui"
 import { useCell, useDb } from "../../store/hooks"
-import {
-  deleteMilestone,
-  renameMilestone,
-} from "../../store/operations/milestones"
-import {
-  clearMilestoneDates,
-  finishMilestoneOn,
-  reopenMilestone,
-  startMilestoneOn,
-} from "../../store/operations/schedule"
+import { renameMilestone } from "../../store/operations/milestones"
 import type { MilestoneId } from "../../store/schema"
 import {
   editMilestone,
   selectMilestone,
-  startPickingDate,
   stopEditingMilestone,
 } from "../../store/ui-store"
-import {
-  ContextMenu,
-  ContextMenuItem,
-  ContextMenuSeparator,
-} from "../../ui/context-menu"
+import { ContextMenu } from "../../ui/context-menu"
 import InlineEditInput from "../../ui/inline-edit-input"
-import MilestoneColorMenu from "./milestone-color-menu"
 import MilestoneRowCard from "./milestone-row-card"
+import MilestoneRowMenu from "./milestone-row-menu"
 import { useSortableRow } from "./use-sortable-row"
 
 export default function MilestoneRow({
@@ -42,18 +27,11 @@ export default function MilestoneRow({
   const isSelected = useIsMilestoneSelected(milestoneId)
   const isEditing = useIsMilestoneEditing(milestoneId)
   const name = useCell("milestones", milestoneId, "name")
-  const startedAt = useCell("milestones", milestoneId, "startedAt")
-  const finishedAt = useCell("milestones", milestoneId, "finishedAt")
   // While dragging, the library floats the real row (data-dnd-dragging) and
   // keeps a cloned stand-in in the list flow (data-dnd-placeholder); the data
   // variants below style those two states. Every placement change commits the
   // real order, so the stand-in is always the true drop position.
   const ref = useSortableRow({ index, milestoneId })
-
-  // A milestone that has not started has no end to talk about, so the menu
-  // offers only the two ways to begin it. Reading "today" at click time rather
-  // than from the render keeps a window left open overnight honest.
-  const hasStarted = startedAt !== undefined
 
   return (
     <ContextMenu
@@ -112,78 +90,7 @@ export default function MilestoneRow({
         </li>
       }
     >
-      <ContextMenuItem
-        onClick={() => {
-          startMilestoneOn(db, milestoneId, todayKey())
-        }}
-      >
-        Start today
-      </ContextMenuItem>
-      {hasStarted && finishedAt === undefined && (
-        <ContextMenuItem
-          onClick={() => {
-            finishMilestoneOn(db, milestoneId, todayKey())
-          }}
-        >
-          Finish today
-        </ContextMenuItem>
-      )}
-      {finishedAt !== undefined && (
-        <ContextMenuItem
-          onClick={() => {
-            reopenMilestone(db, milestoneId)
-          }}
-        >
-          Mark as in progress
-        </ContextMenuItem>
-      )}
-
-      <ContextMenuSeparator />
-
-      <ContextMenuItem
-        onClick={() => {
-          startPickingDate(milestoneId, "start")
-        }}
-      >
-        Start on day…
-      </ContextMenuItem>
-      {hasStarted && (
-        <ContextMenuItem
-          onClick={() => {
-            startPickingDate(milestoneId, "finish")
-          }}
-        >
-          Finish on day…
-        </ContextMenuItem>
-      )}
-      {hasStarted && (
-        <ContextMenuItem
-          onClick={() => {
-            clearMilestoneDates(db, milestoneId)
-          }}
-        >
-          Clear dates
-        </ContextMenuItem>
-      )}
-
-      <ContextMenuSeparator />
-
-      <MilestoneColorMenu milestoneId={milestoneId} />
-      <ContextMenuItem
-        onClick={() => {
-          editMilestone(milestoneId)
-        }}
-      >
-        Rename
-      </ContextMenuItem>
-      <ContextMenuItem
-        danger
-        onClick={() => {
-          deleteMilestone(db, milestoneId)
-        }}
-      >
-        Delete
-      </ContextMenuItem>
+      <MilestoneRowMenu milestoneId={milestoneId} />
     </ContextMenu>
   )
 }

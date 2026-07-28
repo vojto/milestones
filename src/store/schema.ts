@@ -2,8 +2,9 @@ import { createStore, type Content } from "tinybase/with-schemas"
 
 export type MilestoneId = string
 
-// One table. A milestone is a name, a place in the list, a color, and the two
-// days that say where it sits on the timeline.
+// Two tables, and the second one is a set. A milestone is a name, a place in
+// the list, a color, and the two days that say where it sits on the timeline;
+// a vacation is a day the timeline skips.
 //
 // `startedAt` and `finishedAt` are undefaulted on purpose, because their
 // absence is the state that matters: no `startedAt` means the milestone has
@@ -27,6 +28,18 @@ export const TABLES_SCHEMA = {
     // for a milestone that has not said when it was (see ./milestone-span).
     year: { type: "number" },
   },
+  // The days taken out of the timeline. A vacation day is not a milestone's to
+  // claim: the milestones still run straight through it — their dates are
+  // untouched, and the no-overlap rule never sees this table — but no band is
+  // painted on it, so a run reads as ending the day before and picking up again
+  // the day after (see components/calendar/use-calendar-view).
+  //
+  // The row id *is* the day key, which is what makes marking one idempotent and
+  // asking about one a lookup rather than a scan. The cell repeats the id
+  // because a row with no cells is not a row as far as TinyBase is concerned.
+  vacations: {
+    day: { type: "string" },
+  },
 } as const
 
 // The document has no values — the selection, the year on screen, the pane
@@ -45,4 +58,7 @@ export const createAppStore = () =>
 // Used only when nothing has been persisted yet. An empty document: the list
 // starts empty and the calendar starts blank, which is what an app you have
 // not told anything yet should look like.
-export const INITIAL_CONTENT: Content<Schemas, true> = [{ milestones: {} }, {}]
+export const INITIAL_CONTENT: Content<Schemas, true> = [
+  { milestones: {}, vacations: {} },
+  {},
+]

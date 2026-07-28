@@ -6,7 +6,11 @@ import {
   ContextMenuRadioItem,
   ContextMenuSubmenu,
 } from "../../ui/context-menu"
-import { MILESTONE_COLORS, milestoneColor } from "../../ui/milestone-colors"
+import {
+  MILESTONE_COLORS,
+  milestoneColor,
+  milestoneColorKey,
+} from "../../ui/milestone-colors"
 
 // The row menu's color submenu: the whole palette as one-of-many, each option
 // wearing the color it names — the name alone would make you guess, and a
@@ -27,11 +31,7 @@ export default function MilestoneColorMenu({
         onValueChange={(nextColorKey) => {
           setMilestoneColor(db, milestoneId, nextColorKey)
         }}
-        // Resolving here rather than passing the raw cell keeps the checkmark
-        // on a real option when the stored key is one this version retired.
-        value={
-          MILESTONE_COLORS[colorKey ?? ""] === undefined ? "" : (colorKey ?? "")
-        }
+        value={milestoneColorKey(colorKey)}
       >
         {Object.entries(MILESTONE_COLORS).map(([key, { name }]) => (
           <ContextMenuRadioItem key={key} value={key}>

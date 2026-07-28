@@ -118,6 +118,13 @@ export function milestoneColor(colorKey: string | undefined): MilestoneColor {
   return MILESTONE_COLORS[colorKey ?? ""] ?? FALLBACK_COLOR
 }
 
+// The same question asked of the key rather than the color, for the palette
+// menu: "" for a milestone wearing something this version retired, which is
+// what keeps the checkmark off every option instead of on a missing one.
+export function milestoneColorKey(colorKey: string | undefined): string {
+  return colorKey !== undefined && colorKey in MILESTONE_COLORS ? colorKey : ""
+}
+
 // The color a new milestone gets: the first one nobody is using, so a handful
 // of milestones are always all different. Once the palette is spent it wraps
 // around — repeating a hue is better than running out of them.

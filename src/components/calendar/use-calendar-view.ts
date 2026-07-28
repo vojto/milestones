@@ -1,5 +1,12 @@
 import type { Table } from "tinybase/with-schemas"
-import { addDays, type DayKey } from "../../dates/day"
+import {
+  addDays,
+  earlierDay,
+  firstDayOfYear,
+  lastDayOfYear,
+  laterDay,
+  type DayKey,
+} from "../../dates/day"
 import {
   usePickingMilestoneId,
   useSelectedMilestoneId,
@@ -8,6 +15,7 @@ import { useToday } from "../../hooks/use-today"
 import { useDb, useTable } from "../../store/hooks"
 import { paintedRange } from "../../store/milestone-span"
 import { commitDatePick } from "../../store/operations/schedule"
+import { toggleVacationDay } from "../../store/operations/vacations"
 import type { MilestoneId, Schemas } from "../../store/schema"
 import { milestoneColor, type MilestoneColor } from "../../ui/milestone-colors"
 
@@ -27,6 +35,11 @@ export interface CalendarView {
   // overlap (see store/operations/schedule), so one entry per day is the whole
   // answer and no day has to choose between two.
   fills: Map<DayKey, DayFill>
+  // The days taken out of the timeline (see store/operations/vacations). They
+  // are simply left out of `fills` rather than drawn over, so a milestone
+  // running through one gets a band that ends the day before and begins again
+  // the day after, with no special case anywhere downstream.
+  vacationDays: ReadonlySet<DayKey>
   today: DayKey
   // While a date is being picked the calendar stops being a chart and becomes
   // an input: `fills` is empty, so the year goes plain and every day reads as
@@ -34,6 +47,7 @@ export interface CalendarView {
   isPicking: boolean
   selectedMilestoneId: MilestoneId | undefined
   onPickDay: (day: DayKey) => void
+  onToggleVacationDay: (day: DayKey) => void
 }
 
 const NO_FILLS = new Map<DayKey, DayFill>()
@@ -42,17 +56,26 @@ export function useCalendarView(year: number): CalendarView {
   const db = useDb()
   const today = useToday()
   const milestones = useTable("milestones")
+  const vacations = useTable("vacations")
   const pickingMilestoneId = usePickingMilestoneId()
   const selectedMilestoneId = useSelectedMilestoneId()
   const isPicking = pickingMilestoneId !== undefined
+  // The row ids are the days themselves (see store/schema).
+  const vacationDays = new Set(Object.keys(vacations))
 
   return {
-    fills: isPicking ? NO_FILLS : fillsForYear(milestones, year, today),
+    fills: isPicking
+      ? NO_FILLS
+      : fillsForYear(milestones, vacationDays, year, today),
+    vacationDays,
     today,
     isPicking,
     selectedMilestoneId,
     onPickDay: (day) => {
       commitDatePick(db, day)
+    },
+    onToggleVacationDay: (day) => {
+      toggleVacationDay(db, day)
     },
   }
 }
@@ -62,12 +85,13 @@ export function useCalendarView(year: number): CalendarView {
 // rather than three.
 function fillsForYear(
   milestones: Table<Schemas[0], "milestones">,
+  vacationDays: ReadonlySet<DayKey>,
   year: number,
   today: DayKey,
 ): Map<DayKey, DayFill> {
   const fills = new Map<DayKey, DayFill>()
-  const firstOfYear = `${year}-01-01`
-  const lastOfYear = `${year}-12-31`
+  const firstOfYear = firstDayOfYear(year)
+  const lastOfYear = lastDayOfYear(year)
 
   for (const [milestoneId, row] of Object.entries(milestones)) {
     const range = paintedRange(row.startedAt, row.finishedAt, today)
@@ -79,10 +103,12 @@ function fillsForYear(
       continue
     }
     const color = milestoneColor(row.color)
-    const last = range.to < lastOfYear ? range.to : lastOfYear
-    let day = range.from > firstOfYear ? range.from : firstOfYear
+    const last = earlierDay(range.to, lastOfYear)
+    let day = laterDay(range.from, firstOfYear)
     while (day <= last) {
-      fills.set(day, { milestoneId, color })
+      if (!vacationDays.has(day)) {
+        fills.set(day, { milestoneId, color })
+      }
       day = addDays(day, 1)
     }
   }
@@ -91,7 +117,8 @@ function fillsForYear(
 
 // Where a run of one milestone's days begins and ends, which is all the day
 // cell needs to round the right corners: consecutive days sit flush and read
-// as one band, and only the two ends of the band are rounded.
+// as one band, and only the two ends of the band are rounded. A vacation day
+// carries no fill, so the run genuinely ends at it and both sides round.
 export function runEdges(view: CalendarView, day: DayKey) {
   const milestoneId = view.fills.get(day)?.milestoneId
   return {

@@ -1,4 +1,5 @@
 import {
+  dayOfMonth,
   formatDay,
   monthOf,
   weekdayIndex,
@@ -6,6 +7,11 @@ import {
   type DayKey,
 } from "../../dates/day"
 import { runEdges, type CalendarView, type DayFill } from "./use-calendar-view"
+
+// Both modes lay the cell out the same way, so entering a date pick does not
+// move a single number.
+const CELL_CLASS =
+  "relative flex h-6 items-center justify-center text-[11px] tabular-nums"
 
 // One day of a month. Two layers: the milestone's band, which spans the whole
 // cell so consecutive days join into a continuous bar, and the number on top
@@ -28,7 +34,7 @@ export default function CalendarDay({
   }
 
   const fill = view.fills.get(day)
-  const isToday = day === view.today
+  const isVacation = view.vacationDays.has(day)
   // With a milestone selected, the rest of the year steps back so its own
   // stretch reads at a glance. Nothing is hidden — a faded band is still a
   // band — and with nothing selected the whole year is at full strength.
@@ -37,42 +43,72 @@ export default function CalendarDay({
     view.selectedMilestoneId !== undefined &&
     view.selectedMilestoneId !== fill.milestoneId
 
-  const dayOfMonth = Number(day.slice(-2))
-  const textClass =
-    fill === undefined || isDimmed
-      ? "text-neutral-500"
-      : fill.color.dayTextClass
-  // Today is circled rather than filled in, and the circle is drawn in the
-  // number's own color: on a plain day it is a grey outline, and on a colored
-  // one it takes the band's ink, so marking today never fights the milestone
-  // underneath it. The heavier weight is what carries at a glance.
-  const numberClass = isToday
-    ? `flex size-5 items-center justify-center rounded-full font-medium ring-1 ring-current ${textClass}`
-    : textClass
+  const numberClass = dayNumberClass({
+    fill,
+    isDimmed,
+    isToday: day === view.today,
+    isVacation,
+  })
 
   return (
-    <td className="relative p-0">
+    // data-day is how a right-click finds which day it landed on: the calendar
+    // has one context menu for the whole year rather than one per cell (see
+    // ./year-calendar). Only the days of the month being drawn carry it, so
+    // right-clicking a blank corner offers nothing.
+    <td className="relative p-0" data-day={day}>
       {fill !== undefined && (
         <DayBand day={day} fill={fill} isDimmed={isDimmed} view={view} />
       )}
       {view.isPicking ? (
         <button
           aria-label={formatDay(day)}
-          className="relative flex h-6 w-full items-center justify-center rounded-md text-[11px] tabular-nums transition-colors hover:bg-neutral-200"
+          className={`${CELL_CLASS} w-full rounded-md transition-colors hover:bg-neutral-200`}
           onClick={() => {
             view.onPickDay(day)
           }}
           type="button"
         >
-          <span className={numberClass}>{dayOfMonth}</span>
+          <span className={numberClass}>{dayOfMonth(day)}</span>
         </button>
       ) : (
-        <div className="relative flex h-6 items-center justify-center text-[11px] tabular-nums">
-          <span className={numberClass}>{dayOfMonth}</span>
+        <div className={CELL_CLASS}>
+          <span className={numberClass}>{dayOfMonth(day)}</span>
         </div>
       )}
     </td>
   )
+}
+
+// How the number is inked, which is three answers layered on one span:
+//
+//   - whose day it is: the band's own text color, or grey where no band
+//     reaches — including a dimmed one, whose number steps back with it.
+//   - whether it is a day off: struck through, in an ink darker than a plain
+//     day's, because a day crossed out is a statement rather than an absence.
+//   - whether it is today: circled rather than filled in, and in the number's
+//     own color, so on a colored day the circle takes the band's ink and
+//     marking today never fights the milestone underneath it. The heavier
+//     weight is what carries at a glance.
+function dayNumberClass({
+  fill,
+  isDimmed,
+  isToday,
+  isVacation,
+}: {
+  fill: DayFill | undefined
+  isDimmed: boolean
+  isToday: boolean
+  isVacation: boolean
+}): string {
+  const inkClass = isVacation
+    ? "text-neutral-600 line-through"
+    : fill === undefined || isDimmed
+      ? "text-neutral-500"
+      : fill.color.dayTextClass
+
+  return isToday
+    ? `flex size-5 items-center justify-center rounded-full font-medium ring-1 ring-current ${inkClass}`
+    : inkClass
 }
 
 // The colored band behind the number, drawn as its own layer so dimming it

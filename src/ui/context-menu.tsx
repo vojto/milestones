@@ -17,15 +17,25 @@ const POPUP_CLASS =
 const ITEM_CLASS =
   "mx-1 cursor-default select-none rounded-md px-2.5 py-1.5 text-sm outline-none"
 
+// Left uncontrolled — no `isOpen` — the menu opens wherever it was
+// right-clicked and closes itself, which is all a menu belonging to one entity
+// needs. Passing the pair makes it controlled instead, for a trigger covering
+// many things at once: the calendar spans a whole year with one menu, and
+// which day it is for (or that it is for no day at all) is decided by the
+// right-click rather than by which element caught it.
 export function ContextMenu({
   children,
+  isOpen,
+  onOpenChange,
   trigger,
 }: {
   children: ReactNode
+  isOpen?: boolean
+  onOpenChange?: (isOpen: boolean) => void
   trigger: ReactElement<Record<string, unknown>>
 }) {
   return (
-    <BaseContextMenu.Root>
+    <BaseContextMenu.Root onOpenChange={onOpenChange} open={isOpen}>
       <BaseContextMenu.Trigger render={trigger} />
       <BaseContextMenu.Portal>
         <BaseContextMenu.Positioner className="z-50 outline-none">

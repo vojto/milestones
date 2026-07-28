@@ -2,6 +2,7 @@ import { useRef } from "react"
 import { useShownYear } from "../../hooks/use-milestone-ui"
 import { useFlipList } from "../../hooks/use-flip-list"
 import { clearMilestoneSelection } from "../../store/ui-store"
+import { closestElement } from "../../ui/closest-element"
 import MilestoneRow from "./milestone-row"
 import { useShownMilestones } from "./use-shown-milestones"
 
@@ -25,7 +26,7 @@ export default function MilestoneList() {
       // Deselect on presses that land outside any row; row presses bubble up
       // here but have already selected via the row's own handler.
       onPointerDown={(event) => {
-        if (!(event.target as Element).closest('[role="option"]')) {
+        if (closestElement(event.target, '[role="option"]') === undefined) {
           clearMilestoneSelection()
         }
       }}

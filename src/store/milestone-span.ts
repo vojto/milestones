@@ -99,6 +99,18 @@ export function runsThroughYear(
   return claim.from <= lastDayOfYear(year) && to >= firstDayOfYear(year)
 }
 
+// Whether a milestone is behind you. Not simply "has a finish date": one set
+// on a day still to come is a plan rather than a fact, and the milestone goes
+// on running until that day arrives. A milestone finished today has been
+// reached — the day has come — which is what makes "Finish today" show its
+// effect at once rather than at midnight.
+export function isReached(
+  finishedAt: string | undefined,
+  today: DayKey,
+): boolean {
+  return finishedAt !== undefined && finishedAt <= today
+}
+
 // The days that actually get the milestone's color. Undefined when there is
 // nothing to paint: the milestone has not started, or it is still running and
 // its start is in the future, so its whole life so far is zero days long.

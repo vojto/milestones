@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import { dayCount, formatDay, yearOf } from "../../dates/day"
 import { useToday } from "../../hooks/use-today"
 import { useCell } from "../../store/hooks"
-import { paintedRange } from "../../store/milestone-span"
+import { isReached, paintedRange } from "../../store/milestone-span"
 import type { MilestoneId } from "../../store/schema"
 import { displayName } from "../../ui/display-name"
 import { milestoneColor } from "../../ui/milestone-colors"
@@ -23,12 +23,25 @@ export default function MilestoneRowCard({
 }) {
   const name = useCell("milestones", milestoneId, "name")
   const color = milestoneColor(useCell("milestones", milestoneId, "color"))
+  const finishedAt = useCell("milestones", milestoneId, "finishedAt")
+  const today = useToday()
 
   if (name === undefined) {
     return null
   }
 
   const { isPlaceholder, text } = displayName(name)
+
+  // A milestone that has been reached is done with, and its name says so:
+  // struck through, and settled toward the grey its dates are already in
+  // rather than sitting at full strength. The dot keeps its color — it is
+  // what ties the row to its band in the calendar, and the band does not go
+  // anywhere either.
+  const nameClass = isPlaceholder
+    ? "text-neutral-400"
+    : isReached(finishedAt, today)
+      ? "text-neutral-500 line-through"
+      : "text-neutral-800"
 
   // The transition class rides along only in the editing state, so entering
   // edit mode animates but selection changes snap. It's scoped to
@@ -50,13 +63,7 @@ export default function MilestoneRowCard({
         className={`size-2.5 shrink-0 rounded-full ${color.dotClass}`}
       />
       {children ?? (
-        <span
-          className={`min-w-0 flex-1 truncate ${
-            isPlaceholder ? "text-neutral-400" : "text-neutral-800"
-          }`}
-        >
-          {text}
-        </span>
+        <span className={`min-w-0 flex-1 truncate ${nameClass}`}>{text}</span>
       )}
       {/* Last in both modes: the rename input replaces the name, which is
           what pushes the dates to the edge, so they stay put while typing. */}

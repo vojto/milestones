@@ -2,6 +2,7 @@ import {
   useIsMilestoneEditing,
   useIsMilestoneSelected,
 } from "../../hooks/use-milestone-ui"
+import { contextMenuHandler } from "../../platform/context-menu"
 import { useCell, useDb } from "../../store/hooks"
 import { renameMilestone } from "../../store/operations/milestones"
 import type { MilestoneId } from "../../store/schema"
@@ -10,10 +11,9 @@ import {
   selectMilestone,
   stopEditingMilestone,
 } from "../../store/ui-store"
-import { ContextMenu } from "../../ui/context-menu"
 import InlineEditInput from "../../ui/inline-edit-input"
 import MilestoneRowCard from "./milestone-row-card"
-import MilestoneRowMenu from "./milestone-row-menu"
+import { milestoneRowMenu } from "./milestone-row-menu"
 import { useSortableRow } from "./use-sortable-row"
 
 export default function MilestoneRow({
@@ -34,63 +34,57 @@ export default function MilestoneRow({
   const ref = useSortableRow({ index, milestoneId })
 
   return (
-    <ContextMenu
-      trigger={
-        <li
-          ref={ref}
-          className="touch-none data-[dnd-dragging]:rounded-lg data-[dnd-dragging]:bg-white data-[dnd-dragging]:shadow-lg data-[dnd-placeholder]:rounded-lg data-[dnd-placeholder]:bg-neutral-100 [&[data-dnd-placeholder]_div]:invisible"
-          data-flip-id={milestoneId}
-          // Focusable so keyboard users can select, and so the library's
-          // keyboard sorting can pick the row up.
-          aria-selected={isSelected}
-          role="option"
-          tabIndex={0}
-          // Selection happens on pointer down (not click) so a milestone is
-          // already selected when a drag starts, and stays highlighted while
-          // dragged.
-          onPointerDown={() => {
-            selectMilestone(milestoneId)
-          }}
-          onDoubleClick={() => {
-            editMilestone(milestoneId)
-          }}
-          // The pane behind us opens its own menu on background right-clicks;
-          // keep row right-clicks from reaching it so only the row menu opens.
-          onContextMenu={(event) => {
-            event.stopPropagation()
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              editMilestone(milestoneId)
-            }
-          }}
-        >
-          {/* Both modes render the same element tree — a branch returning a
-              different wrapper would remount the row and kill the css
-              transition into edit mode. */}
-          <MilestoneRowCard
-            isEditing={isEditing}
-            isSelected={isSelected}
-            milestoneId={milestoneId}
-          >
-            {isEditing ? (
-              <InlineEditInput
-                className="min-w-0 flex-1 select-text bg-transparent p-0 text-neutral-800 outline-none"
-                initialValue={name ?? ""}
-                onCancel={stopEditingMilestone}
-                onCommit={(nextName) => {
-                  if (nextName !== undefined) {
-                    renameMilestone(db, milestoneId, nextName)
-                  }
-                  stopEditingMilestone()
-                }}
-              />
-            ) : undefined}
-          </MilestoneRowCard>
-        </li>
-      }
+    <li
+      ref={ref}
+      className="touch-none data-[dnd-dragging]:rounded-lg data-[dnd-dragging]:bg-white data-[dnd-dragging]:shadow-lg data-[dnd-placeholder]:rounded-lg data-[dnd-placeholder]:bg-neutral-100 [&[data-dnd-placeholder]_div]:invisible"
+      data-flip-id={milestoneId}
+      // Focusable so keyboard users can select, and so the library's
+      // keyboard sorting can pick the row up.
+      aria-selected={isSelected}
+      role="option"
+      tabIndex={0}
+      // Selection happens on pointer down (not click) so a milestone is
+      // already selected when a drag starts, and stays highlighted while
+      // dragged.
+      onPointerDown={() => {
+        selectMilestone(milestoneId)
+      }}
+      onDoubleClick={() => {
+        editMilestone(milestoneId)
+      }}
+      // The pane behind us has a menu of its own for background right-clicks;
+      // the handler stops the event, so only the row menu opens.
+      onContextMenu={contextMenuHandler(() =>
+        milestoneRowMenu(db, milestoneId),
+      )}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          editMilestone(milestoneId)
+        }
+      }}
     >
-      <MilestoneRowMenu milestoneId={milestoneId} />
-    </ContextMenu>
+      {/* Both modes render the same element tree — a branch returning a
+          different wrapper would remount the row and kill the css
+          transition into edit mode. */}
+      <MilestoneRowCard
+        isEditing={isEditing}
+        isSelected={isSelected}
+        milestoneId={milestoneId}
+      >
+        {isEditing ? (
+          <InlineEditInput
+            className="min-w-0 flex-1 select-text bg-transparent p-0 text-neutral-800 outline-none"
+            initialValue={name ?? ""}
+            onCancel={stopEditingMilestone}
+            onCommit={(nextName) => {
+              if (nextName !== undefined) {
+                renameMilestone(db, milestoneId, nextName)
+              }
+              stopEditingMilestone()
+            }}
+          />
+        ) : undefined}
+      </MilestoneRowCard>
+    </li>
   )
 }

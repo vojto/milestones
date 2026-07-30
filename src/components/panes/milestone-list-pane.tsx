@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react"
+import { contextMenuHandler } from "../../platform/context-menu"
 import { useDb } from "../../store/hooks"
 import { createMilestone } from "../../store/operations/milestones"
-import { ContextMenu, ContextMenuItem } from "../../ui/context-menu"
 import PaneHeader from "../../ui/pane-header"
 import ToolbarButton from "../../ui/toolbar-button"
 import MilestoneList from "../milestone-list/milestone-list"
@@ -27,17 +27,17 @@ export default function MilestoneListPane() {
           New milestone
         </ToolbarButton>
       </PaneHeader>
-      <ContextMenu
-        trigger={
-          <div className="flex min-h-0 flex-1 flex-col">
-            <MilestoneList />
-          </div>
-        }
+      {/* The pane's own menu, for a right-click on the empty space below the
+          list; a row's menu takes precedence because the row's handler stops
+          the event before it gets here. */}
+      <div
+        className="flex min-h-0 flex-1 flex-col"
+        onContextMenu={contextMenuHandler(() => [
+          { label: "New milestone", run: handleNewMilestone },
+        ])}
       >
-        <ContextMenuItem onClick={handleNewMilestone}>
-          New milestone
-        </ContextMenuItem>
-      </ContextMenu>
+        <MilestoneList />
+      </div>
     </section>
   )
 }

@@ -1,7 +1,6 @@
-import { useState } from "react"
 import type { DayKey } from "../../dates/day"
+import { contextMenuHandler } from "../../platform/context-menu"
 import { closestElement } from "../../ui/closest-element"
-import { ContextMenu, ContextMenuItem } from "../../ui/context-menu"
 import MonthCalendar from "./month-calendar"
 import { GAP_X, GAP_Y, MONTH_WIDTH, useCalendarFit } from "./use-calendar-fit"
 import { useCalendarView } from "./use-calendar-view"
@@ -21,60 +20,45 @@ const MONTHS = Array.from({ length: 12 }, (_unused, month) => month)
 export default function YearCalendar({ year }: { year: number }) {
   const view = useCalendarView(year)
   const { columns, containerRef, gridRef, scale } = useCalendarFit()
-  // One menu for the whole year rather than one per day. A menu is a floating
-  // state machine of its own, and three hundred of them sitting behind three
-  // hundred numbers would be rebuilt every time anything about the year
-  // changed — so the grid holds the only one and the right-click says which
-  // day it is for. A right-click that missed the days finds none, which is
-  // what keeps the menu from opening over the gaps between months.
-  const [menuDay, setMenuDay] = useState<DayKey | undefined>(undefined)
 
   return (
     <div ref={containerRef} className="relative min-h-0 flex-1 overflow-hidden">
-      <ContextMenu
-        isOpen={menuDay !== undefined}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) {
-            setMenuDay(undefined)
+      {/* One handler for the whole year rather than one per day: three hundred
+          of them behind three hundred numbers would be rebuilt every time
+          anything about the year changed, so the grid catches the right-click
+          and says which day it was for. A right-click that missed the days
+          describes no menu, which is what keeps one from opening over the gaps
+          between months. */}
+      <div
+        ref={gridRef}
+        className="absolute left-1/2 top-1/2 grid"
+        onContextMenu={contextMenuHandler((event) => {
+          const day = dayAt(event.target)
+          if (day === undefined) {
+            return []
           }
+          return [
+            {
+              label: view.vacationDays.has(day)
+                ? "Clear vacation day"
+                : "Mark as vacation day",
+              run: () => {
+                view.onToggleVacationDay(day)
+              },
+            },
+          ]
+        })}
+        style={{
+          columnGap: GAP_X,
+          gridTemplateColumns: `repeat(${columns}, ${MONTH_WIDTH}px)`,
+          rowGap: GAP_Y,
+          transform: `translate(-50%, -50%) scale(${scale})`,
         }}
-        trigger={
-          <div
-            ref={gridRef}
-            className="absolute left-1/2 top-1/2 grid"
-            onContextMenu={(event) => {
-              setMenuDay(dayAt(event.target))
-            }}
-            style={{
-              columnGap: GAP_X,
-              gridTemplateColumns: `repeat(${columns}, ${MONTH_WIDTH}px)`,
-              rowGap: GAP_Y,
-              transform: `translate(-50%, -50%) scale(${scale})`,
-            }}
-          >
-            {MONTHS.map((month) => (
-              <MonthCalendar
-                key={month}
-                month={month}
-                view={view}
-                year={year}
-              />
-            ))}
-          </div>
-        }
       >
-        {menuDay !== undefined && (
-          <ContextMenuItem
-            onClick={() => {
-              view.onToggleVacationDay(menuDay)
-            }}
-          >
-            {view.vacationDays.has(menuDay)
-              ? "Clear vacation day"
-              : "Mark as vacation day"}
-          </ContextMenuItem>
-        )}
-      </ContextMenu>
+        {MONTHS.map((month) => (
+          <MonthCalendar key={month} month={month} view={view} year={year} />
+        ))}
+      </div>
     </div>
   )
 }

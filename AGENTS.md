@@ -7,8 +7,8 @@ calendar on the left, a sortable list of milestones on the right. Each
 milestone owns a color and a stretch of days, and those days are painted into
 the calendar. Tauri v2 for the desktop shell, React 19 + Vite + TypeScript
 (strict, `noUncheckedIndexedAccess`) + Tailwind v4, TinyBase v9 for the
-document, Zustand for UI state, `@dnd-kit/react` for drag and drop,
-`@base-ui/react` for menus. No router.
+document, Zustand for UI state, `@dnd-kit/react` for drag and drop. Menus are
+the host's, not a component library's. No router.
 
 There is no browser build. The app assumes a window, a menu bar and a
 filesystem, and `npm run dev` on its own will fail at the first thing it asks
@@ -107,6 +107,12 @@ keep in sync, and so far nothing has needed one.
   Rust, because whether Undo is available is a question about TinyBase
   checkpoints and those live in the webview. Its items call the same
   `store/operations` functions as everything else.
+- **Context menus are native too** (`platform/context-menu.ts`). Anything with
+  a menu describes it as a `ContextMenuItem[]` — a plain function, not a
+  component, built at right-click time so it reads the milestone as it is now
+  — and hands it to `contextMenuHandler`, the single `onContextMenu` handler
+  that builds the host menu, pops it and claims the event. Add a menu by
+  writing a description, never by drawing one.
 - **Commands with a modifier belong to the menu; bare keys belong to
   `keyboard/use-keyboard.ts`.** ⌘Z and ⌘N are menu accelerators, and the
   keymap returns early on any modifier so one keystroke cannot fire twice.

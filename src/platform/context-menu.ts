@@ -1,10 +1,5 @@
 import { Menu } from "@tauri-apps/api/menu"
-import type {
-  CheckMenuItemOptions,
-  MenuItemOptions,
-  PredefinedMenuItemOptions,
-  SubmenuOptions,
-} from "@tauri-apps/api/menu"
+import type { MenuOptions } from "@tauri-apps/api/menu"
 import type { MouseEvent } from "react"
 
 // Context menus are the host's. Right-clicking builds a real macOS menu and
@@ -26,20 +21,27 @@ export type ContextMenuItem =
   | { label: string; isChecked?: boolean; run: () => void }
   | { label: string; items: ContextMenuItem[] }
 
+// What a right-click describes: the items, with `false` standing for a command
+// that does not apply — a milestone that has not started has no end to talk
+// about. It is what a list of JSX children allowed and the reason a menu can
+// be written as the list it is rather than as a run of ternaries; the false
+// ones are dropped on the way to the host.
+export type ContextMenuDescription = (ContextMenuItem | false)[]
+
 // The right-click handler for anything with a menu. The description is built
 // at click time rather than at render, so the items are the answer for the
 // milestone as it is now and a menu costs nothing until it is asked for.
 //
 // A right-click that opens a menu is spoken for: the webview's own menu is
 // suppressed, and the event stops so it does not also reach whatever is
-// behind — the list pane draws a menu behind every row. A description that
-// comes back empty, which is what a right-click on the gap between two months
-// gets, claims nothing and is left to bubble.
+// behind — the list pane draws a menu behind every row. A description with
+// nothing left in it, which is what a right-click on the gap between two
+// months comes to, claims nothing and is left to bubble.
 export function contextMenuHandler(
-  describe: (event: MouseEvent) => ContextMenuItem[],
+  describe: (event: MouseEvent) => ContextMenuDescription,
 ) {
   return (event: MouseEvent) => {
-    const items = describe(event)
+    const items = describe(event).filter((item) => item !== false)
     if (items.length === 0) {
       return
     }
@@ -64,11 +66,8 @@ async function showContextMenu(items: ContextMenuItem[]) {
   await menu.popup()
 }
 
-type ItemOptions =
-  | CheckMenuItemOptions
-  | MenuItemOptions
-  | PredefinedMenuItemOptions
-  | SubmenuOptions
+// Anything a menu accepts as one of its items.
+type ItemOptions = NonNullable<MenuOptions["items"]>[number]
 
 function menuItemOptions(item: ContextMenuItem): ItemOptions {
   if (item === "separator") {

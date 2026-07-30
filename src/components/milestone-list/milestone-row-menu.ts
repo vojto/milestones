@@ -1,5 +1,5 @@
 import { todayKey } from "../../dates/day"
-import type { ContextMenuItem } from "../../platform/context-menu"
+import type { ContextMenuDescription } from "../../platform/context-menu"
 import type { Db } from "../../store/hooks"
 import { deleteMilestone } from "../../store/operations/milestones"
 import {
@@ -27,10 +27,11 @@ import { milestoneColorMenu } from "./milestone-color-menu"
 export function milestoneRowMenu(
   db: Db,
   milestoneId: MilestoneId,
-): ContextMenuItem[] {
-  const startedAt = db.store.getCell("milestones", milestoneId, "startedAt")
-  const finishedAt = db.store.getCell("milestones", milestoneId, "finishedAt")
-  const hasStarted = startedAt !== undefined
+): ContextMenuDescription {
+  const hasStarted =
+    db.store.getCell("milestones", milestoneId, "startedAt") !== undefined
+  const hasFinished =
+    db.store.getCell("milestones", milestoneId, "finishedAt") !== undefined
 
   return [
     {
@@ -39,26 +40,19 @@ export function milestoneRowMenu(
         startMilestoneOn(db, milestoneId, todayKey())
       },
     },
-    ...(hasStarted && finishedAt === undefined
-      ? [
-          {
-            label: "Finish today",
-            run: () => {
-              finishMilestoneOn(db, milestoneId, todayKey())
-            },
-          },
-        ]
-      : []),
-    ...(finishedAt !== undefined
-      ? [
-          {
-            label: "Mark as in progress",
-            run: () => {
-              reopenMilestone(db, milestoneId)
-            },
-          },
-        ]
-      : []),
+    hasStarted &&
+      !hasFinished && {
+        label: "Finish today",
+        run: () => {
+          finishMilestoneOn(db, milestoneId, todayKey())
+        },
+      },
+    hasFinished && {
+      label: "Mark as in progress",
+      run: () => {
+        reopenMilestone(db, milestoneId)
+      },
+    },
 
     "separator",
 
@@ -68,22 +62,18 @@ export function milestoneRowMenu(
         startPickingDate(milestoneId, "start")
       },
     },
-    ...(hasStarted
-      ? [
-          {
-            label: "Finish on day…",
-            run: () => {
-              startPickingDate(milestoneId, "finish")
-            },
-          },
-          {
-            label: "Clear dates",
-            run: () => {
-              clearMilestoneDates(db, milestoneId)
-            },
-          },
-        ]
-      : []),
+    hasStarted && {
+      label: "Finish on day…",
+      run: () => {
+        startPickingDate(milestoneId, "finish")
+      },
+    },
+    hasStarted && {
+      label: "Clear dates",
+      run: () => {
+        clearMilestoneDates(db, milestoneId)
+      },
+    },
 
     "separator",
 

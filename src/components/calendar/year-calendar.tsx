@@ -1,9 +1,12 @@
 import type { DayKey } from "../../dates/day"
-import { contextMenuHandler } from "../../platform/context-menu"
+import {
+  contextMenuHandler,
+  type ContextMenuDescription,
+} from "../../platform/context-menu"
 import { closestElement } from "../../ui/closest-element"
 import MonthCalendar from "./month-calendar"
 import { GAP_X, GAP_Y, MONTH_WIDTH, useCalendarFit } from "./use-calendar-fit"
-import { useCalendarView } from "./use-calendar-view"
+import { useCalendarView, type CalendarView } from "./use-calendar-view"
 
 const MONTHS = Array.from({ length: 12 }, (_unused, month) => month)
 
@@ -26,28 +29,13 @@ export default function YearCalendar({ year }: { year: number }) {
       {/* One handler for the whole year rather than one per day: three hundred
           of them behind three hundred numbers would be rebuilt every time
           anything about the year changed, so the grid catches the right-click
-          and says which day it was for. A right-click that missed the days
-          describes no menu, which is what keeps one from opening over the gaps
-          between months. */}
+          and works out which day it was for. */}
       <div
         ref={gridRef}
         className="absolute left-1/2 top-1/2 grid"
-        onContextMenu={contextMenuHandler((event) => {
-          const day = dayAt(event.target)
-          if (day === undefined) {
-            return []
-          }
-          return [
-            {
-              label: view.vacationDays.has(day)
-                ? "Clear vacation day"
-                : "Mark as vacation day",
-              run: () => {
-                view.onToggleVacationDay(day)
-              },
-            },
-          ]
-        })}
+        onContextMenu={contextMenuHandler((event) =>
+          vacationMenu(view, dayAt(event.target)),
+        )}
         style={{
           columnGap: GAP_X,
           gridTemplateColumns: `repeat(${columns}, ${MONTH_WIDTH}px)`,
@@ -70,4 +58,23 @@ function dayAt(target: EventTarget): DayKey | undefined {
   return (
     closestElement(target, "[data-day]")?.getAttribute("data-day") ?? undefined
   )
+}
+
+// The one thing a day can be told to do. A right-click that found no day
+// describes nothing, which is what keeps a menu from opening over the gaps
+// between months.
+function vacationMenu(
+  view: CalendarView,
+  day: DayKey | undefined,
+): ContextMenuDescription {
+  return [
+    day !== undefined && {
+      label: view.vacationDays.has(day)
+        ? "Clear vacation day"
+        : "Mark as vacation day",
+      run: () => {
+        view.onToggleVacationDay(day)
+      },
+    },
+  ]
 }

@@ -1,0 +1,64 @@
+@import 'tailwindcss';
+
+:root {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue',
+    Arial, sans-serif;
+  font-synthesis: none;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+}
+
+::selection {
+  background: #ffd21f;
+  color: #151515;
+}
+
+.hero-glow {
+  position: relative;
+  background:
+    radial-gradient(circle at 18% 30%, rgb(255 142 145 / 36%), transparent 25%),
+    radial-gradient(circle at 80% 25%, rgb(255 210 31 / 38%), transparent 24%),
+    radial-gradient(circle at 68% 85%, rgb(85 217 175 / 36%), transparent 26%),
+    #ece8e1;
+  box-shadow: 0 40px 100px rgb(38 33 26 / 13%);
+}
+
+.cta-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(4px);
+  opacity: 0.65;
+}
+
+.cta-orb-one {
+  top: -35%;
+  left: -10%;
+  width: 55%;
+  aspect-ratio: 1;
+  background: #ff3f9f;
+}
+
+.cta-orb-two {
+  right: -10%;
+  bottom: -50%;
+  width: 60%;
+  aspect-ratio: 1;
+  background: #376aff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
